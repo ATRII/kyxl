@@ -1,0 +1,76 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "homo vs rule",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/fight_mp.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--map",
+                "1000_1000_fighter10v10",
+                "--agent1",
+                "homo_rule",
+                "--agent2",
+                "fix_rule_no_att"
+            ]
+        },
+        {
+            "name": "Python: 当前文件",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "${fileDirname}"
+        },
+        {
+            "name": "Run fight.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/fight.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--map",
+                "1000_1000_2_10_vs_2_10",
+                "--agent1",
+                "simple"
+            ]
+        },
+        {
+            "name": "Run fight_mp.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/fight_mp.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--map",
+                "1000_1000_fighter10v10",
+                "--agent1",
+                "simple"
+            ]
+        },
+        {
+            "name": "Run simple/main.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/train/simple/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Run maddpg/main.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/train/maddpg/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

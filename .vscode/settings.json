@@ -1,0 +1,11 @@
+{
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8"
+    },
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/environment"
+    ],
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/environment"
+    ]
+}
