@@ -48,6 +48,9 @@ if __name__ == "__main__":
         tt_rwd = 0
         env.reset()
         while True:
+            if (total_cnt-1) % 50 == 0:
+                loss_list = np.array(fighter_model.losslist)
+                np.save("./loss.npy", loss_list)
             obs_list = []
             action_list = []
             red_fighter_action = []
@@ -68,7 +71,7 @@ if __name__ == "__main__":
                     tmp_img_obs = tmp_img_obs.transpose(2, 0, 1)
                     tmp_info_obs = red_obs_dict['fighter'][y]['info']
                     # print(tmp_img_obs.dtype)
-                    if (total_cnt > 500):
+                    if (total_cnt < 500):
                         tmp_action = fighter_model.select_actions(
                             y, tmp_img_obs, tmp_info_obs, True, eps)
                     else:

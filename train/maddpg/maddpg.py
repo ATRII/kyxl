@@ -108,8 +108,7 @@ class Critic(nn.Module):
         self.fc2 = nn.Sequential(
             nn.Linear(184, 16),
             nn.ReLU(),
-            nn.Linear(16, 1),
-            nn.Tanh()
+            nn.Linear(16, 1)
         )
 
     def forward(self, obs: torch.Tensor, info: torch.Tensor, act: torch.Tensor):
@@ -195,6 +194,9 @@ class MADDPG:
         self.maptensor = torch.tensor([180., 12.5]).cuda()
         self.replace_target_iter = 1000
         self.learn_step_counter = 0
+        self.losslist = []
+        for i in range(n_agents):
+            self.losslist.append([])
         # 创建每个无人机的Actor和Critic网络
         for i in range(n_agents):
             self.agents[i] = {
@@ -316,7 +318,9 @@ class MADDPG:
             q = self.agents[i]['critic'](
                 obs_s_t[:, i], obs_i_t[:, i], act)
             actor_loss = -q.mean()
-
+            actor_loss_scalar = actor_loss.item()
+            print("actor_loss", actor_loss_scalar)
+            self.losslist[i].append(actor_loss_scalar)
             self.actor_optimizer[i].zero_grad()
             actor_loss.backward()
             self.actor_optimizer[i].step()
@@ -336,7 +340,8 @@ class MADDPG:
                 obs_s_t = torch.tensor(obs_s).float()
                 obs_i_t = torch.tensor(obs_i).float()
                 if use_noise:
-                    noise = 0.4 * np.random.random(len(actions))
+                    noise = 0.4 * \
+                        torch.tensor(np.random.random(len(actions))).cuda()
                     actions += noise
                 if self.cuda_use:
                     obs_s_t = obs_s_t.cuda()
@@ -346,9 +351,7 @@ class MADDPG:
                 action_tensor = (self.agents[ith]['actor'](
                     obs_s_t, obs_i_t)+1.)*self.maptensor
                 # print(action_tensor)
-                # 将动作张量转换为 NumPy 数组
                 actions = action_tensor.cpu().detach().numpy()
-
                 actions = np.squeeze(actions)
                 # print(type(actions))
                 return actions
