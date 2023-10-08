@@ -5,6 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "maddpg vs rule",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/fight_mp.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--map",
+                "1000_1000_fighter10v10",
+                "--agent1",
+                "maddpg",
+                "--agent2",
+                "fix_rule_no_att"
+            ]
+        },
+        {
             "name": "homo vs rule",
             "type": "python",
             "request": "launch",

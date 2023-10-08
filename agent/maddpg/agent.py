@@ -26,7 +26,7 @@ class Agent(BaseAgent):
         """
         BaseAgent.__init__(self)
         self.obs_ind = 'maddpg'
-        if not os.path.exists('model/maddpg/model.pkl'):
+        if not os.path.exists('model/maddpg/model_0001000.pkl'):
             print('Error: agent maddpg model data not exist!')
             exit(1)
         self.fighter_model = maddpg.MADDPG(10, [5, 100, 100], 2, True)
@@ -60,7 +60,7 @@ class Agent(BaseAgent):
                 tmp_img_obs = tmp_img_obs.transpose(2, 0, 1)
                 tmp_info_obs = obs_dict['fighter'][y]['info']
                 tmp_action = self.fighter_model.select_actions(
-                    tmp_img_obs, tmp_info_obs)
+                    y, tmp_img_obs, tmp_info_obs)
                 # action formation
                 true_action[0] = np.floor(tmp_action[0])
                 true_action[3] = np.floor(tmp_action[1])

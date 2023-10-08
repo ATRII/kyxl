@@ -41,7 +41,7 @@ class GlobalVar:
     reward_strike_act_invalid = -10
 
     # Keep alive in a step
-    reward_keep_alive_step = 1
+    reward_keep_alive_step = 0
 
     # Round reward：totally win
     reward_totally_win = 200

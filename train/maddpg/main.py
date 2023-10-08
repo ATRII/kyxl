@@ -1,14 +1,13 @@
 import os
 import copy
 import numpy as np
-from torch.utils.tensorboard import SummaryWriter
 from agent.fix_rule_no_att.agent import Agent
 from interface import Environment
 from train.maddpg import maddpg
 MAP_PATH = 'maps/1000_1000_fighter10v10.map'
 
 RENDER = True
-MAX_EPOCH = 100
+MAX_EPOCH = 2000
 BATCH_SIZE = 200
 LR = 0.01                   # learning rate
 EPSILON = 0.9               # greedy policy
@@ -19,7 +18,8 @@ FIGHTER_NUM = 10
 LEARN_INTERVAL = 100
 
 if __name__ == "__main__":
-    writer = SummaryWriter('./log/maddpg')
+    rwd_list = []
+    # writer = SummaryWriter('./log/maddpg')
     # create blue agent
     blue_agent = Agent()
     # get agent obs type
@@ -43,11 +43,11 @@ if __name__ == "__main__":
     tt_rwd = 0
     eps = 1
     for x in range(MAX_EPOCH):
-        eps = np.exp(-total_cnt)
         step_cnt = 0
         tt_rwd = 0
         env.reset()
         while True:
+            eps = np.exp(-total_cnt/2000)
             if (total_cnt-1) % 50 == 0:
                 loss_list = np.array(fighter_model.losslist)
                 np.save("./loss.npy", loss_list)
@@ -71,7 +71,7 @@ if __name__ == "__main__":
                     tmp_img_obs = tmp_img_obs.transpose(2, 0, 1)
                     tmp_info_obs = red_obs_dict['fighter'][y]['info']
                     # print(tmp_img_obs.dtype)
-                    if (total_cnt < 500):
+                    if (total_cnt < 100000):
                         tmp_action = fighter_model.select_actions(
                             y, tmp_img_obs, tmp_info_obs, True, eps)
                     else:
@@ -80,9 +80,15 @@ if __name__ == "__main__":
                     obs_list.append({'screen': copy.deepcopy(
                         tmp_img_obs), 'info': copy.deepcopy(tmp_info_obs)})
                     action_list.append(tmp_action)
+                    # print("tmp_action.shape: ", tmp_action.shape)
                     # action formation
                     true_action[0] = np.floor(tmp_action[0])
                     true_action[3] = np.floor(tmp_action[1])
+                else:
+                    empty_obs = {'screen': np.zeros(
+                        [5, 100, 100]), 'info': np.zeros(3)}
+                    obs_list.append(empty_obs)
+                    action_list.append(np.array([-1, -1]))
                 red_fighter_action.append(true_action)
             red_fighter_action = np.array(red_fighter_action)
             # step
@@ -92,20 +98,28 @@ if __name__ == "__main__":
             red_detector_reward, red_fighter_reward, red_game_reward, blue_detector_reward, blue_fighter_reward, blue_game_reward = env.get_reward()
             detector_reward = red_detector_reward + red_game_reward
             fighter_reward = red_fighter_reward + red_game_reward
-            tt_rwd += np.mean(fighter_reward)
+            m_rwd = np.mean(fighter_reward)
+            print("mean reward: ", m_rwd)
+            tt_rwd += m_rwd
             # save replay
             red_obs_dict, blue_obs_dict = env.get_obs()
             tmp_obs_list = []
             for y in range(red_fighter_num):
                 # if obs_got_ind[y]:
-                tmp_img_obs = red_obs_dict['fighter'][y]['screen']
-                tmp_img_obs = tmp_img_obs.transpose(2, 0, 1)
-                tmp_info_obs = red_obs_dict['fighter'][y]['info']
-                tmp_obs_list.append({'screen': copy.deepcopy(
-                    tmp_img_obs), 'info': copy.deepcopy(tmp_info_obs)})
+                if red_obs_dict['fighter'][y]['alive']:
+                    tmp_img_obs = red_obs_dict['fighter'][y]['screen']
+                    tmp_img_obs = tmp_img_obs.transpose(2, 0, 1)
+                    tmp_info_obs = red_obs_dict['fighter'][y]['info']
+                    tmp_obs_list.append({'screen': copy.deepcopy(
+                        tmp_img_obs), 'info': copy.deepcopy(tmp_info_obs)})
+                else:
+                    empty_obs = {'screen': np.zeros(
+                        [5, 100, 100]), 'info': np.zeros(3)}
+                    tmp_obs_list.append(empty_obs)
             # 10*{5*100*100, 3}, 10*2, 10, 10*{5*100*100, 3}
             fighter_model.memory_buff.push(obs_list, np.array(action_list), fighter_reward,
                                            tmp_obs_list)
+
             # if done, perform a learn
             if env.get_done():
                 # detector_model.learn()
@@ -118,6 +132,10 @@ if __name__ == "__main__":
             step_cnt += 1
             total_cnt += 1
         mean_rwd = tt_rwd/step_cnt
-        print("mean_rwd: ", mean_rwd)
-        writer.add_scalar('mean_reward', mean_rwd,
-                          global_step=None, walltime=None)
+        rwd_list.append(mean_rwd)
+        rwd_n = np.array(rwd_list)
+        if x % 20 == 0:
+            np.save("./rwd.npy", rwd_n)
+        # print("mean_rwd: ", mean_rwd)
+        # writer.add_scalar('mean_reward', mean_rwd,
+        #                   global_step=None, walltime=None)

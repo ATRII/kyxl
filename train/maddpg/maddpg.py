@@ -259,12 +259,12 @@ class MADDPG:
 
     def learn(self, batch_size):
         t0 = time.time()
-        self.learn_step_counter += 1
         print("train cnt: ", self.learn_step_counter)
         if self.learn_step_counter % self.replace_target_iter == 0:
-            step_counter_str = '%09d' % self.learn_step_counter
+            step_counter_str = '%08d' % self.learn_step_counter
             torch.save({i: self.agents[i]['actor'].state_dict(
             ) for i in range(self.n_agents)}, 'model/maddpg/model_' + step_counter_str + '.pkl')
+        self.learn_step_counter += 1
         obs_s_t, obs_i_t, act_t, rew_t, next_obs_s_t, next_obs_i_t = self.sample(
             batch_size)
         obs_s_t, obs_i_t, act_t, rew_t, next_obs_s_t, next_obs_i_t = obs_s_t.float(
@@ -319,7 +319,7 @@ class MADDPG:
                 obs_s_t[:, i], obs_i_t[:, i], act)
             actor_loss = -q.mean()
             actor_loss_scalar = actor_loss.item()
-            print("actor_loss", actor_loss_scalar)
+            # print("actor_loss", actor_loss_scalar)
             self.losslist[i].append(actor_loss_scalar)
             self.actor_optimizer[i].zero_grad()
             actor_loss.backward()
