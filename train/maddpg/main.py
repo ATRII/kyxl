@@ -1,25 +1,22 @@
-import os
 import copy
 import numpy as np
-from agent.fix_rule_no_att.agent import Agent
+from agent.fix_rule.agent import Agent
 from interface import Environment
 from train.maddpg import maddpg
-MAP_PATH = 'maps/1000_1000_fighter10v10.map'
 
+MAP_PATH = 'maps/1000_1000_fighter10v10.map'
 RENDER = True
 MAX_EPOCH = 2000
-BATCH_SIZE = 200
-LR = 0.01                   # learning rate
-EPSILON = 0.9               # greedy policy
+BATCH_SIZE = 128
 GAMMA = 0.9                 # reward discount
 TARGET_REPLACE_ITER = 100   # target update frequency
 DETECTOR_NUM = 0
 FIGHTER_NUM = 10
 LEARN_INTERVAL = 100
+MAX_STEP = 600
 
 if __name__ == "__main__":
     rwd_list = []
-    # writer = SummaryWriter('./log/maddpg')
     # create blue agent
     blue_agent = Agent()
     # get agent obs type
@@ -37,8 +34,8 @@ if __name__ == "__main__":
 
     red_detector_action = []
     fighter_model = maddpg.MADDPG(
-        FIGHTER_NUM, [5, 100, 100], 2, True, 1000, "hard")
-    total_cnt = 0
+        FIGHTER_NUM, [5, 100, 100], 4, True, 100000, "hard")
+    total_cnt = 0  # not related to epoch
     mean_rwd = 0
     tt_rwd = 0
     eps = 1
@@ -46,9 +43,13 @@ if __name__ == "__main__":
         step_cnt = 0
         tt_rwd = 0
         env.reset()
+        cur_step = 0
         while True:
+            cur_step += 1
+            if cur_step > MAX_STEP:
+                break
             eps = np.exp(-total_cnt/2000)
-            if (total_cnt-1) % 50 == 0:
+            if total_cnt % 100 == 0:
                 loss_list = np.array(fighter_model.losslist)
                 np.save("./loss.npy", loss_list)
             obs_list = []
@@ -82,13 +83,16 @@ if __name__ == "__main__":
                     action_list.append(tmp_action)
                     # print("tmp_action.shape: ", tmp_action.shape)
                     # action formation
+                    # TODO:TEST1
                     true_action[0] = np.floor(tmp_action[0])
-                    true_action[3] = np.floor(tmp_action[1])
+                    true_action[1] = np.floor(tmp_action[1])
+                    true_action[2] = np.floor(tmp_action[2])
+                    true_action[3] = np.floor(tmp_action[3])
                 else:
                     empty_obs = {'screen': np.zeros(
                         [5, 100, 100]), 'info': np.zeros(3)}
                     obs_list.append(empty_obs)
-                    action_list.append(np.array([-1, -1]))
+                    action_list.append(np.array([-1, -1, -1, -1]))
                 red_fighter_action.append(true_action)
             red_fighter_action = np.array(red_fighter_action)
             # step
@@ -99,7 +103,7 @@ if __name__ == "__main__":
             detector_reward = red_detector_reward + red_game_reward
             fighter_reward = red_fighter_reward + red_game_reward
             m_rwd = np.mean(fighter_reward)
-            print("mean reward: ", m_rwd)
+            # print("mean reward: ", m_rwd)
             tt_rwd += m_rwd
             # save replay
             red_obs_dict, blue_obs_dict = env.get_obs()
@@ -123,12 +127,12 @@ if __name__ == "__main__":
             # if done, perform a learn
             if env.get_done():
                 # detector_model.learn()
-                fighter_model.learn(64)
+                fighter_model.learn(BATCH_SIZE)
                 break
             # if not done learn when learn interval
             if (total_cnt > 500) and (step_cnt % LEARN_INTERVAL == 0):
                 # detector_model.learn()
-                fighter_model.learn(64)
+                fighter_model.learn(BATCH_SIZE)
             step_cnt += 1
             total_cnt += 1
         mean_rwd = tt_rwd/step_cnt

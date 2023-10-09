@@ -46,7 +46,7 @@ class Actor(nn.Module):
             nn.ReLU()
         )
         self.fc2 = nn.Sequential(
-            nn.Linear(124, 2),
+            nn.Linear(124, 4),
             nn.Tanh()
         )
 
@@ -106,7 +106,7 @@ class Critic(nn.Module):
             nn.ReLU()
         )
         self.fc2 = nn.Sequential(
-            nn.Linear(184, 16),
+            nn.Linear(244, 16),
             nn.ReLU(),
             nn.Linear(16, 1)
         )
@@ -122,9 +122,9 @@ class Critic(nn.Module):
                       torch.flatten(y, 1, -1)), dim=1)  # 124
 
         # print("action shape: ", act.shape)
-        z = torch.repeat_interleave(torch.flatten(act, 1, -1), 3, dim=1)  # 60
+        z = torch.repeat_interleave(torch.flatten(act, 1, -1), 3, dim=1)  # 120
         x = torch.cat((torch.flatten(x, 1, -1), z
-                       ), dim=1)  # 184
+                       ), dim=1)  # 244
         x = self.fc2(x)
         return x
 
@@ -191,7 +191,7 @@ class MADDPG:
         self.gamma = 0.95
         self.train_cnt = 0
         self.updmode = updmode
-        self.maptensor = torch.tensor([180., 12.5]).cuda()
+        self.maptensor = torch.tensor([180., 5.5-1e-6, 6-1e-6, 13-1e-6]).cuda()
         self.replace_target_iter = 1000
         self.learn_step_counter = 0
         self.losslist = []

@@ -68,7 +68,7 @@ class MADDPG:
         self.train_cnt = 0
         self.gpu_enable = torch.cuda.is_available()
         # print(self.gpu_enable)
-        self.maptensor = torch.tensor([180., 12.5])
+        self.maptensor = torch.tensor([180., 5.5-1e-6])
 
         for i in range(n_agents):
             self.agents[i] = Actor(obs_dims)
